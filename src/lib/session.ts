@@ -8,21 +8,35 @@ import crypto from "node:crypto";
  * mudar o id dentro dele invalida a assinatura.
  */
 
-const SEGREDO = process.env.APP_SECRET ?? "";
 const DURACAO_PADRAO_S = 60 * 60 * 8; // 8 horas: uma jornada de aula
 
 export const COOKIE_SESSAO = "prova_professor";
 
 export type Sessao = { id: number; nome: string; exp: number };
 
+/** Erro de configuração do servidor, não erro do usuário. */
+export class ConfiguracaoAusente extends Error {}
+
+export const TAMANHO_MINIMO_SEGREDO = 16;
+
+/** O segredo é conferido a cada uso, nunca guardado numa constante de módulo. */
+export function segredoConfigurado(): boolean {
+  const valor = process.env.APP_SECRET ?? "";
+  return valor.length >= TAMANHO_MINIMO_SEGREDO;
+}
+
 function chave(): string {
-  if (!SEGREDO || SEGREDO.length < 16) {
-    // Falha cedo e com mensagem clara em vez de assinar com segredo fraco.
-    throw new Error(
-      "APP_SECRET ausente ou curto demais. Defina um valor longo e aleatorio no .env."
+  // Ler process.env aqui dentro, e não no topo do arquivo, é intencional:
+  // no topo o valor seria lido uma única vez, quando o módulo é carregado,
+  // e um build feito antes de a variável existir congelaria o valor vazio.
+  const valor = process.env.APP_SECRET ?? "";
+  if (valor.length < TAMANHO_MINIMO_SEGREDO) {
+    throw new ConfiguracaoAusente(
+      "APP_SECRET ausente ou com menos de 16 caracteres. Defina essa variável de " +
+        "ambiente no painel da hospedagem (ou no .env, em desenvolvimento) e publique de novo."
     );
   }
-  return SEGREDO;
+  return valor;
 }
 
 function assinatura(corpo: string): string {
@@ -44,7 +58,15 @@ export function lerCookie(valor: string | undefined): Sessao | null {
   const [corpo, assinado] = valor.split(".");
   if (!corpo || !assinado) return null;
 
-  const esperado = assinatura(corpo);
+  // Ler um cookie sem o segredo configurado significa "ninguém está logado",
+  // não "derrube a página": quem avisa sobre a configuração é a tela de login.
+  let esperado: string;
+  try {
+    esperado = assinatura(corpo);
+  } catch {
+    return null;
+  }
+
   // timingSafeEqual exige o mesmo tamanho, senao lanca.
   if (esperado.length !== assinado.length) return null;
   if (!crypto.timingSafeEqual(Buffer.from(esperado), Buffer.from(assinado))) return null;

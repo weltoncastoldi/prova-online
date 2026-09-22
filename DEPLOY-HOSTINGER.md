@@ -77,10 +77,24 @@ Se uma migração falhar, o script **para ali**, não marca o arquivo como aplic
 
 ## 6. Publicar e conferir
 
-Depois do deploy, abra:
+**Abra primeiro `https://seudominio.com.br/api/diagnostico`.** Ele responde se cada variável está preenchida e se o banco responde, sem mostrar nenhum valor:
+
+```json
+{
+  "tudo_certo": true,
+  "app_secret": { "definido": true, "tamanho": 96, "minimo_exigido": 16, "valido": true },
+  "banco": { "conectado": true, "migracoes": 3, "professores": 1, "questoes": 36 }
+}
+```
+
+Com `"tudo_certo": false`, o próprio JSON aponta o que falta. O erro mais comum é preencher as variáveis `DB_*` e esquecer o **`APP_SECRET`**: o banco e as migrações funcionam normalmente, e a falha só aparece no momento de entrar no painel, porque é aí que o cookie de sessão é assinado.
+
+Depois, abra:
 
 - `https://seudominio.com.br/admin` → entre e **troque a senha inicial**
 - `https://seudominio.com.br/` → lista das provas publicadas
+
+Quando estiver tudo certo, você pode apagar `src/app/api/diagnostico/route.ts` — nada mais depende dele.
 
 O link que você passa para a turma é `https://seudominio.com.br/p/<slug>`, mostrado na tela de configuração de cada avaliação.
 
