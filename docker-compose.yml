@@ -1,0 +1,67 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: prova_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-prova_online}
+      MYSQL_USER: ${DB_USER:-prova}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-prova}
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # O banco sobe vazio de propósito: quem cria as tabelas e carrega os dados
+      # é o `npm run migrar` do contêiner da aplicação, exatamente como acontece
+      # no deploy. Assim o caminho de migração é testado a cada subida.
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      target: dev
+    container_name: prova_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-prova_online}
+      DB_USER: ${DB_USER:-prova}
+      DB_PASSWORD: ${DB_PASSWORD:-prova}
+      APP_SECRET: ${APP_SECRET:-troque-este-segredo-em-producao}
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - next_cache:/app/.next
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: prova_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "8081:80"
+
+volumes:
+  db_data:
+  node_modules:
+  next_cache:

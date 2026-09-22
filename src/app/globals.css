@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-slate-100 text-slate-800 antialiased;
+  }
+  /* Alvo de toque confortável no celular, onde a prova costuma ser feita. */
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+/* No Tailwind 4, @apply só aceita utilities. Declarar "btn" com @utility é o
+   que permite reaproveitá-la nas variações abaixo. */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold
+         transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@layer components {
+  .cartao {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .btn-primario {
+    @apply btn bg-blue-700 text-white hover:bg-blue-800;
+  }
+  .btn-secundario {
+    @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  }
+  .btn-perigo {
+    @apply btn border border-red-200 bg-white text-red-700 hover:bg-red-50;
+  }
+
+  .rotulo {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+  .campo {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900
+           outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100;
+  }
+  .ajuda {
+    @apply mt-1 text-xs text-slate-500;
+  }
+
+  .etiqueta {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* Bloco de código das questões. O conteúdo é sempre texto escapado pelo React. */
+  .bloco-codigo {
+    @apply overflow-x-auto rounded-lg bg-slate-900 px-4 py-3.5 font-mono text-[13px]
+           leading-relaxed text-slate-100;
+  }
+
+  /* Alternativa da prova: o label inteiro é clicável. */
+  .alternativa {
+    @apply flex cursor-pointer items-start gap-3 rounded-lg border-2 border-slate-200 bg-white p-4
+           transition-colors hover:border-blue-300 hover:bg-blue-50/40;
+  }
+  .alternativa:has(input:checked) {
+    @apply border-blue-600 bg-blue-50;
+  }
+}
