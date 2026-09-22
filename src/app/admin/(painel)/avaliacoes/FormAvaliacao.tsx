@@ -2,20 +2,15 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { FUSO_APP, paraCampoLocal } from "@/lib/datas";
 import type { Avaliacao, Uc } from "@/lib/tipos";
 import { ROTULO_EXIBIR_RESULTADO } from "@/lib/tipos";
 import { salvarAvaliacaoAction, type EstadoAvaliacao } from "./actions";
 
-/** Date do banco -> valor aceito pelo input datetime-local, em horário local. */
-function paraInput(valor: Date | string | null): string {
-  if (!valor) return "";
-  const data = valor instanceof Date ? valor : new Date(valor);
-  if (Number.isNaN(data.getTime())) return "";
-  const dois = (n: number) => String(n).padStart(2, "0");
-  return `${data.getFullYear()}-${dois(data.getMonth() + 1)}-${dois(data.getDate())}T${dois(
-    data.getHours()
-  )}:${dois(data.getMinutes())}`;
-}
+// A conversão vive em @/lib/datas para a gravação e a exibição usarem
+// exatamente a mesma regra. Quando cada lado tinha a sua, as datas andavam
+// algumas horas a cada vez que o formulário era salvo.
+const paraInput = paraCampoLocal;
 
 export default function FormAvaliacao({
   ucs,
@@ -216,6 +211,11 @@ export default function FormAvaliacao({
             />
           </div>
         </div>
+
+        <p className="ajuda -mt-2">
+          Horários no fuso de <strong>{FUSO_APP.replace("_", " ").replace("/", " / ")}</strong>. Digite a hora do
+          relógio da escola; o sistema converte para o servidor.
+        </p>
 
         <div>
           <label className="rotulo" htmlFor="status">

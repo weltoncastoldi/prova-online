@@ -138,9 +138,12 @@ export async function iniciarTentativa(
 
   await transacao(async (cx) => {
     const [r] = await cx.execute(
+      // iniciada_em vai explícito em UTC: o DEFAULT da tabela usaria o fuso do
+      // servidor MySQL, e o cronômetro da prova compara esse valor com o
+      // relógio do app.
       `INSERT INTO tentativa (avaliacao_id, aluno_nome, aluno_nome_norm, token, total_questoes,
-                              pontos_possiveis, ip, user_agent)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                              pontos_possiveis, ip, user_agent, iniciada_em)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())`,
       [
         avaliacao.id,
         nomeAluno,
@@ -276,7 +279,7 @@ export async function registrarResposta(
 
     await cx.execute(
       `UPDATE tentativa_questao
-          SET respondida = 1, respondida_em = NOW(), correta = ?, pontos_obtidos = ?
+          SET respondida = 1, respondida_em = UTC_TIMESTAMP(), correta = ?, pontos_obtidos = ?
         WHERE id = ?`,
       [correta ? 1 : 0, pontosObtidos, tentativaQuestaoId]
     );
@@ -293,7 +296,7 @@ export async function finalizar(tentativaId: number, expirada = false): Promise<
   await executar(
     `UPDATE tentativa t
         SET t.status = ?,
-            t.finalizada_em = NOW(),
+            t.finalizada_em = UTC_TIMESTAMP(),
             t.acertos = (SELECT COUNT(*) FROM tentativa_questao q
                           WHERE q.tentativa_id = t.id AND q.correta = 1),
             t.pontos_obtidos = (SELECT COALESCE(SUM(q.pontos_obtidos), 0) FROM tentativa_questao q

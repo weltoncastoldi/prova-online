@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatarDataHora } from "@/lib/datas";
 import { consultar, consultarUm } from "@/lib/db";
 import { listarAvaliacoes } from "@/lib/repos/avaliacoes";
 
@@ -78,7 +79,7 @@ export default async function Painel() {
                   {linha.titulo}
                 </Link>
                 <span className="ml-auto text-slate-500">
-                  {new Date(linha.iniciada_em).toLocaleString("pt-BR")}
+                  {formatarDataHora(linha.iniciada_em)}
                 </span>
                 <span className="w-12 text-right font-semibold text-slate-700">
                   {linha.nota == null ? "—" : Number(linha.nota).toFixed(1).replace(".", ",")}

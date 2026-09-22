@@ -47,8 +47,8 @@ export async function listarPublicadas(): Promise<AvaliacaoNaLista[]> {
        FROM avaliacao a
        JOIN uc u ON u.id = a.uc_id
       WHERE a.status = 'publicada'
-        AND (a.abre_em  IS NULL OR a.abre_em  <= NOW())
-        AND (a.fecha_em IS NULL OR a.fecha_em >= NOW())
+        AND (a.abre_em  IS NULL OR a.abre_em  <= UTC_TIMESTAMP())
+        AND (a.fecha_em IS NULL OR a.fecha_em >= UTC_TIMESTAMP())
       ORDER BY a.titulo`
   );
 }

@@ -24,6 +24,11 @@ function criarPool(): Pool {
     waitForConnections: true,
     connectionLimit: Number(process.env.DB_POOL_LIMIT ?? 10),
     queueLimit: 0,
+    // Toda coluna DATETIME é lida e escrita como UTC, independentemente do
+    // fuso do servidor onde o app roda. A conversão para o fuso da escola
+    // acontece só na tela, em src/lib/datas.ts. Sem isto, o mesmo horário
+    // significava coisas diferentes no Docker e na Hostinger.
+    timezone: "Z",
     // Devolve DECIMAL como number em vez de string, para nao ter que
     // converter nota e pontos em cada consulta.
     decimalNumbers: true,

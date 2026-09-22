@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirProfessor } from "@/lib/auth";
+import { doCampoParaUtc } from "@/lib/datas";
 import { gerarSlug } from "@/lib/embaralhar";
 import {
   atualizarAvaliacao,
@@ -22,24 +23,24 @@ function texto(dados: FormData, campo: string): string {
   return String(dados.get(campo) ?? "").trim();
 }
 
-/** "2026-09-22T14:00" do input datetime-local -> formato aceito pelo MySQL. */
+/**
+ * "2026-09-22T14:00" digitado pelo professor -> mesmo instante em UTC, que é
+ * como o banco guarda. O professor pensa no fuso da escola; o banco, em UTC.
+ */
 function dataMysql(valor: string): string | null {
   if (!valor) return null;
-  return valor.replace("T", " ") + (valor.length === 16 ? ":00" : "");
+  return doCampoParaUtc(valor);
 }
 
-/**
- * Date vindo do banco -> string do MySQL, montada com os componentes locais.
- * toISOString() converteria para UTC e a data voltaria deslocada.
- */
+/** Instante já vindo do banco (UTC) -> string UTC para gravar de volta. */
 function dataParaMysql(valor: Date | string | null): string | null {
   if (!valor) return null;
   const data = valor instanceof Date ? valor : new Date(valor);
   if (Number.isNaN(data.getTime())) return null;
   const dois = (n: number) => String(n).padStart(2, "0");
   return (
-    `${data.getFullYear()}-${dois(data.getMonth() + 1)}-${dois(data.getDate())} ` +
-    `${dois(data.getHours())}:${dois(data.getMinutes())}:${dois(data.getSeconds())}`
+    `${data.getUTCFullYear()}-${dois(data.getUTCMonth() + 1)}-${dois(data.getUTCDate())} ` +
+    `${dois(data.getUTCHours())}:${dois(data.getUTCMinutes())}:${dois(data.getUTCSeconds())}`
   );
 }
 

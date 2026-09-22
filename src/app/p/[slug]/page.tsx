@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import AguardandoAbertura from "@/components/prova/AguardandoAbertura";
+import { formatarDataHora } from "@/lib/datas";
 import { contarQuestoes, obterAvaliacaoPorSlug } from "@/lib/repos/avaliacoes";
 import FormNome from "./FormNome";
 
@@ -10,11 +12,17 @@ export default async function CapaDaProva({ params }: { params: Promise<{ slug: 
   if (!avaliacao) notFound();
 
   const total = await contarQuestoes(avaliacao.id);
-  const agora = new Date();
-  const foraDaJanela =
-    avaliacao.status !== "publicada" ||
-    (avaliacao.abre_em && new Date(avaliacao.abre_em) > agora) ||
-    (avaliacao.fecha_em && new Date(avaliacao.fecha_em) < agora);
+
+  // Os instantes do banco são UTC; a comparação é entre instantes absolutos,
+  // então independe do fuso de quem abre a página.
+  const agora = Date.now();
+  const abreEm = avaliacao.abre_em ? new Date(avaliacao.abre_em).getTime() : null;
+  const fechaEm = avaliacao.fecha_em ? new Date(avaliacao.fecha_em).getTime() : null;
+
+  const publicada = avaliacao.status === "publicada";
+  const aindaVaiAbrir = publicada && abreEm !== null && abreEm > agora;
+  const jaFechou = publicada && fechaEm !== null && fechaEm < agora;
+  const aberta = publicada && !aindaVaiAbrir && !jaFechou;
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:py-14">
@@ -39,7 +47,16 @@ export default async function CapaDaProva({ params }: { params: Promise<{ slug: 
             </div>
           )}
 
-          {foraDaJanela ? (
+          {aindaVaiAbrir ? (
+            <AguardandoAbertura
+              msParaAbrir={abreEm! - agora}
+              abreEmTexto={formatarDataHora(avaliacao.abre_em)}
+            />
+          ) : jaFechou ? (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              O prazo desta prova encerrou em {formatarDataHora(avaliacao.fecha_em)}.
+            </p>
+          ) : !aberta ? (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               Esta prova não está aberta no momento.
             </p>

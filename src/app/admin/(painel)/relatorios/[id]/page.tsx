@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { formatarDataHora } from "@/lib/datas";
 import { obterAvaliacao } from "@/lib/repos/avaliacoes";
 import { estatisticasPorQuestao, tentativasDaAvaliacao } from "@/lib/repos/tentativas";
 import { ROTULO_TIPO } from "@/lib/tipos";
@@ -103,7 +104,7 @@ export default async function RelatorioAvaliacao({ params }: { params: Promise<{
                         {tentativa.duracao_min ? `${tentativa.duracao_min} min` : "—"}
                       </td>
                       <td className="px-4 py-2.5 text-slate-500">
-                        {new Date(tentativa.iniciada_em).toLocaleString("pt-BR")}
+                        {formatarDataHora(tentativa.iniciada_em)}
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         <form action={removerTentativa.bind(null, tentativa.id, avaliacao.id)}>

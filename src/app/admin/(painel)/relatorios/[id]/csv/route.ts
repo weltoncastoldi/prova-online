@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sessaoAtual } from "@/lib/auth";
+import { formatarDataHora } from "@/lib/datas";
 import { obterAvaliacao } from "@/lib/repos/avaliacoes";
 import { tentativasDaAvaliacao } from "@/lib/repos/tentativas";
 
@@ -36,8 +37,8 @@ export async function GET(_requisicao: Request, contexto: { params: Promise<{ id
       String(t.pontos_possiveis).replace(".", ","),
       t.nota == null ? "" : String(t.nota).replace(".", ","),
       t.duracao_min == null ? "" : String(t.duracao_min).replace(".", ","),
-      new Date(t.iniciada_em).toLocaleString("pt-BR"),
-      t.finalizada_em ? new Date(t.finalizada_em).toLocaleString("pt-BR") : "",
+      formatarDataHora(t.iniciada_em),
+      formatarDataHora(t.finalizada_em),
     ].map(campo).join(";")
   );
 
